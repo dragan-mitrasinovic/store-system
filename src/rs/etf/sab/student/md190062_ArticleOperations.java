@@ -13,14 +13,12 @@ public class md190062_ArticleOperations implements ArticleOperations {
         String insertQuery = "INSERT INTO Article(shopId, name, price) VALUES(?, ?, ?)";
         try (PreparedStatement ps =
                 connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
             ps.setInt(1, shopId);
             ps.setString(2, articleName);
             ps.setInt(3, articlePrice);
             ps.executeUpdate();
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            generatedKeys.next();
-            return generatedKeys.getInt(1);
+            return generatedKeys.next() ? generatedKeys.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }

@@ -21,7 +21,6 @@ public class md190062_GeneralOperations implements GeneralOperations {
         String selectQuery =
                 "SELECT orderId, location, nextCity, timeToNext, systemProfit FROM OrderT WHERE state = 'sent'";
         try (Statement st = connection.createStatement()) {
-
             ResultSet rs = st.executeQuery(selectQuery);
             while (rs.next()) {
                 int orderId = rs.getInt(1);
@@ -31,7 +30,6 @@ public class md190062_GeneralOperations implements GeneralOperations {
                 BigDecimal systemProfit = rs.getBigDecimal(5);
                 updateOrder(orderId, location, nextCity, timeToNext, days, systemProfit);
             }
-
         } catch (SQLException ignored) {
         }
 
@@ -41,7 +39,7 @@ public class md190062_GeneralOperations implements GeneralOperations {
 
     @Override
     public Calendar getCurrentTime() {
-        return systemTime;
+        return (Calendar) systemTime.clone();
     }
 
     @Override
@@ -60,7 +58,6 @@ public class md190062_GeneralOperations implements GeneralOperations {
             for (String query : deleteQueries) {
                 st.execute(query);
             }
-
         } catch (SQLException ignored) {
         }
     }
@@ -77,21 +74,21 @@ public class md190062_GeneralOperations implements GeneralOperations {
         String selectQuery =
                 "SELECT B.cityId FROM OrderT O JOIN Buyer B ON(O.buyerId = B.buyerId) WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            destination = resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            destination = rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ignored) {
             destination = -1;
         }
 
-        int initialDays = days;
+        if (destination == -1) {
+            return;
+        }
 
+        int initialDays = days;
         if (nextCity == 0 && timeToNext > days) {
             String updateQuery = "UPDATE OrderT SET timeToNext = ? WHERE orderId = ?";
             try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
                 ps.setInt(1, timeToNext - days);
                 ps.setInt(2, orderId);
                 ps.executeUpdate();
@@ -134,13 +131,15 @@ public class md190062_GeneralOperations implements GeneralOperations {
         }
     }
 
-    private void finishOrder(int orderId, int destination, BigDecimal systemProfit, long days) {
+    private void finishOrder(int orderId, int destination, BigDecimal systemProfit, int days) {
+        Calendar dateOfArrival = getCurrentTime();
+        dateOfArrival.add(Calendar.DAY_OF_MONTH, days);
         String updateQuery =
                 "UPDATE OrderT SET state = 'arrived', location = ?, receivedTime = ? WHERE orderId = ?";
+
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
             ps.setInt(1, destination);
-            ps.setDate(
-                    2, new Date(getCurrentTime().getTimeInMillis() + days * 24 * 60 * 60 * 1000));
+            ps.setDate(2, new Date(dateOfArrival.getTimeInMillis()));
             ps.setInt(3, orderId);
             ps.executeUpdate();
         } catch (SQLException ignored) {
@@ -151,8 +150,7 @@ public class md190062_GeneralOperations implements GeneralOperations {
         try (PreparedStatement ps = connection.prepareStatement(insertQuery)) {
 
             ps.setInt(1, orderId);
-            ps.setDate(
-                    2, new Date(getCurrentTime().getTimeInMillis() + days * 24 * 60 * 60 * 1000));
+            ps.setDate(2, new Date(dateOfArrival.getTimeInMillis()));
             ps.setBigDecimal(3, systemProfit);
             ps.executeUpdate();
         } catch (SQLException ignored) {

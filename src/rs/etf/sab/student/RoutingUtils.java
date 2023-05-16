@@ -3,12 +3,11 @@ package rs.etf.sab.student;
 import java.util.*;
 
 class Path {
-    private int cost;
-    private List<City> cityList;
+    private final int cost;
+    private final List<City> cityList = new ArrayList<>();
 
-    Path(int cost) {
+    public Path(int cost) {
         this.cost = cost;
-        cityList = new ArrayList<>();
     }
 
     public int getCost() {
@@ -40,11 +39,10 @@ class Path {
 
 class City {
     private final int id;
-    private final Map<City, Integer> connectedCities;
+    private final Map<City, Integer> connectedCities = new HashMap<>();
 
     City(int id) {
         this.id = id;
-        connectedCities = new HashMap<>();
     }
 
     public int getId() {
@@ -81,7 +79,6 @@ public class RoutingUtils {
     public static int getNextCityToDestination(int sourceId, int destinationId) {
         City source = cities.get(sourceId);
         City destination = cities.get(destinationId);
-
         PriorityQueue<Path> queue = new PriorityQueue<>(Comparator.comparing(Path::getCost));
 
         for (Map.Entry<City, Integer> entry : source.getConnectedCities().entrySet()) {
@@ -99,8 +96,12 @@ public class RoutingUtils {
             if (currentPath == null) {
                 return -1;
             }
+
             City lastCity = currentPath.getLastCity();
-            if (lastCity != null && lastCity.equals(destination)) {
+            if (lastCity == null) {
+                return -1;
+            }
+            if (lastCity.equals(destination)) {
                 return currentPath.getFirstCity().getId();
             }
 
@@ -123,12 +124,11 @@ public class RoutingUtils {
 
         City source = cities.get(sourceId);
         City destination = cities.get(destinationId);
-
         PriorityQueue<Path> queue = new PriorityQueue<>(Comparator.comparing(Path::getCost));
 
         for (Map.Entry<City, Integer> entry : source.getConnectedCities().entrySet()) {
-            int cost = entry.getValue();
             City nextCity = entry.getKey();
+            int cost = entry.getValue();
 
             Path newPath = new Path(cost);
             newPath.addCityToPath(nextCity);
@@ -141,14 +141,18 @@ public class RoutingUtils {
             if (currentPath == null) {
                 return -1;
             }
+
             City lastCity = currentPath.getLastCity();
-            if (lastCity != null && lastCity.equals(destination)) {
+            if (lastCity == null) {
+                return -1;
+            }
+            if (lastCity.equals(destination)) {
                 return currentPath.getCost();
             }
 
             for (Map.Entry<City, Integer> entry : lastCity.getConnectedCities().entrySet()) {
-                int cost = entry.getValue();
                 City nextCity = entry.getKey();
+                int cost = entry.getValue();
 
                 Path newPath = new Path(currentPath.getCost() + cost);
                 newPath.copyPath(currentPath);
@@ -169,7 +173,6 @@ public class RoutingUtils {
                 closestCity = city;
             }
         }
-
         return closestCity;
     }
 
@@ -179,7 +182,6 @@ public class RoutingUtils {
             int currentDistance = getDistanceToCity(city, destinationId);
             max = Math.max(max, currentDistance);
         }
-
         return max;
     }
 }

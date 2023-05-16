@@ -17,11 +17,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT COALESCE(SUM(amount), 0) FROM TransactionT WHERE buyerId = ? AND type = 'buyer'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, buyerId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : BigDecimal.valueOf(-1);
         } catch (SQLException ex) {
             return BigDecimal.valueOf(-1);
         }
@@ -32,11 +30,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT COALESCE(SUM(amount), 0) FROM TransactionT WHERE shopId = ? AND type = 'shop'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, shopId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : BigDecimal.valueOf(-1);
         } catch (SQLException ex) {
             return BigDecimal.valueOf(-1);
         }
@@ -49,14 +45,12 @@ public class md190062_TransactionOperations implements TransactionOperations {
         List<Integer> transactions = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, buyerId);
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 transactions.add(resultSet.getInt(1));
             }
-
-            return transactions;
+            return transactions.isEmpty() ? null : transactions;
         } catch (SQLException ex) {
             return null;
         }
@@ -67,11 +61,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT transactionId FROM TransactionT WHERE orderId = ? AND type = 'buyer'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -82,12 +74,10 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT transactionId FROM TransactionT WHERE orderId = ? AND shopId = ? AND type = 'shop'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
             ps.setInt(2, shopId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -100,13 +90,11 @@ public class md190062_TransactionOperations implements TransactionOperations {
         List<Integer> transactions = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, shopId);
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 transactions.add(resultSet.getInt(1));
             }
-
             return transactions.isEmpty() ? null : transactions;
         } catch (SQLException ex) {
             return null;
@@ -117,12 +105,11 @@ public class md190062_TransactionOperations implements TransactionOperations {
     public Calendar getTimeOfExecution(int transactionId) {
         String selectQuery = "SELECT executionTime FROM TransactionT WHERE transactionId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, transactionId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
+            ResultSet rs = ps.executeQuery();
+            rs.next();
 
-            Date executionTime = resultSet.getDate(1);
+            Date executionTime = rs.getDate(1);
             if (executionTime == null) {
                 return null;
             }
@@ -139,11 +126,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
     public BigDecimal getAmmountThatBuyerPayedForOrder(int orderId) {
         String selectQuery = "SELECT amount FROM TransactionT WHERE orderId = ? AND type = 'buyer'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
             return null;
         }
@@ -154,11 +139,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT amount FROM TransactionT WHERE shopId = ? AND orderId = ? AND type = 'shop'";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
             return null;
         }
@@ -168,11 +151,9 @@ public class md190062_TransactionOperations implements TransactionOperations {
     public BigDecimal getTransactionAmount(int transactionId) {
         String selectQuery = "SELECT amount FROM TransactionT WHERE transactionId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, transactionId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
             return null;
         }
@@ -183,12 +164,10 @@ public class md190062_TransactionOperations implements TransactionOperations {
         String selectQuery =
                 "SELECT COALESCE(SUM(amount), 0) FROM TransactionT WHERE type = 'system'";
         try (Statement stm = connection.createStatement()) {
-
-            ResultSet resultSet = stm.executeQuery(selectQuery);
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = stm.executeQuery(selectQuery);
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
-            return BigDecimal.valueOf(-1);
+            return null;
         }
     }
 }

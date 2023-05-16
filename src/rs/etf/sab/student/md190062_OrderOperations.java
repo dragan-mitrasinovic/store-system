@@ -33,7 +33,6 @@ public class md190062_OrderOperations implements OrderOperations {
         if (itemId != -1) {
             String updateQuery = "UPDATE ArticleInOrder SET count = count + ? WHERE itemId = ?";
             try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
                 ps.setInt(1, count);
                 ps.setInt(2, itemId);
                 ps.executeUpdate();
@@ -46,14 +45,12 @@ public class md190062_OrderOperations implements OrderOperations {
                     "INSERT INTO ArticleInOrder(orderId, articleId, count) VALUES(?, ?, ?)";
             try (PreparedStatement ps =
                     connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
                 ps.setInt(1, orderId);
                 ps.setInt(2, articleId);
                 ps.setInt(3, count);
                 ps.executeUpdate();
                 ResultSet generatedKeys = ps.getGeneratedKeys();
-                generatedKeys.next();
-                return generatedKeys.getInt(1);
+                return generatedKeys.next() ? generatedKeys.getInt(1) : -1;
             } catch (SQLException ex) {
                 return -1;
             }
@@ -63,14 +60,16 @@ public class md190062_OrderOperations implements OrderOperations {
     @Override
     public int removeArticle(int orderId, int articleId) {
         int amountRemoved;
-
         String selectQuery = "SELECT count FROM ArticleInOrder WHERE orderId = ? AND articleId = ?";
-        try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
 
+        try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
             ps.setInt(1, orderId);
             ps.setInt(2, articleId);
+
             ResultSet rs = ps.executeQuery();
-            rs.next();
+            if (!rs.next()) {
+                return -1;
+            }
             amountRemoved = rs.getInt(1);
         } catch (SQLException ex) {
             return -1;
@@ -78,7 +77,6 @@ public class md190062_OrderOperations implements OrderOperations {
 
         String deleteQuery = "DELETE FROM ArticleInOrder WHERE orderId = ? AND articleId = ?";
         try (PreparedStatement ps = connection.prepareStatement(deleteQuery)) {
-
             ps.setInt(1, orderId);
             ps.setInt(2, articleId);
             ps.executeUpdate();
@@ -88,11 +86,10 @@ public class md190062_OrderOperations implements OrderOperations {
 
         String updateQuery = "UPDATE Article SET amount = amount + ? WHERE articleId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setInt(1, amountRemoved);
             ps.setInt(2, articleId);
-            ps.executeUpdate();
-            return 1;
+            int updatedRows = ps.executeUpdate();
+            return updatedRows == 1 ? 1 : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -104,13 +101,11 @@ public class md190062_OrderOperations implements OrderOperations {
         List<Integer> items = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                items.add(resultSet.getInt(1));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                items.add(rs.getInt(1));
             }
-
             return items;
         } catch (SQLException ex) {
             return items;
@@ -121,7 +116,6 @@ public class md190062_OrderOperations implements OrderOperations {
     public int completeOrder(int orderId) {
         String procedureQuery = "{ call dbo.SP_FINAL_PRICE (?, ?) }";
         try (CallableStatement cs = connection.prepareCall(procedureQuery)) {
-
             cs.setInt(1, orderId);
             cs.setDate(2, new Date(generalOperations.getCurrentTime().getTimeInMillis()));
             cs.execute();
@@ -129,14 +123,15 @@ public class md190062_OrderOperations implements OrderOperations {
             return -1;
         }
 
-        String finalPriceQuery = "SELECT finalPrice FROM OrderT WHERE orderId = ?";
         BigDecimal finalPrice;
+        String finalPriceQuery = "SELECT finalPrice FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(finalPriceQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            finalPrice = resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                return -1;
+            }
+            finalPrice = rs.getBigDecimal(1);
         } catch (SQLException ex) {
             return -1;
         }
@@ -156,14 +151,11 @@ public class md190062_OrderOperations implements OrderOperations {
 
     @Override
     public BigDecimal getFinalPrice(int orderId) {
-        String selectQuery =
-                "SELECT finalPrice FROM OrderT WHERE orderId = ? AND state != 'created'";
+        String selectQuery = "SELECT finalPrice FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : BigDecimal.valueOf(-1);
         } catch (SQLException ex) {
             return BigDecimal.valueOf(-1);
         }
@@ -171,14 +163,11 @@ public class md190062_OrderOperations implements OrderOperations {
 
     @Override
     public BigDecimal getDiscountSum(int orderId) {
-        String selectQuery =
-                "SELECT discountSum FROM OrderT WHERE orderId = ? AND state != 'created'";
+        String selectQuery = "SELECT discountSum FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : BigDecimal.valueOf(-1);
         } catch (SQLException ex) {
             return BigDecimal.valueOf(-1);
         }
@@ -188,11 +177,9 @@ public class md190062_OrderOperations implements OrderOperations {
     public String getState(int orderId) {
         String selectQuery = "SELECT state FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getString(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getString(1) : null;
         } catch (SQLException ex) {
             return null;
         }
@@ -202,7 +189,6 @@ public class md190062_OrderOperations implements OrderOperations {
     public Calendar getSentTime(int orderId) {
         String selectQuery = "SELECT sentTime FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
             ResultSet resultSet = ps.executeQuery();
             resultSet.next();
@@ -224,7 +210,6 @@ public class md190062_OrderOperations implements OrderOperations {
     public Calendar getRecievedTime(int orderId) {
         String selectQuery = "SELECT receivedTime FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
             ResultSet resultSet = ps.executeQuery();
             resultSet.next();
@@ -246,11 +231,9 @@ public class md190062_OrderOperations implements OrderOperations {
     public int getBuyer(int orderId) {
         String selectQuery = "SELECT buyerId FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -258,13 +241,11 @@ public class md190062_OrderOperations implements OrderOperations {
 
     @Override
     public int getLocation(int orderId) {
-        String selectQuery = "SELECT location FROM OrderT WHERE orderId = ? AND state != 'created'";
+        String selectQuery = "SELECT location FROM OrderT WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -274,12 +255,10 @@ public class md190062_OrderOperations implements OrderOperations {
         String selectQuery =
                 "SELECT itemId FROM ArticleInOrder WHERE orderId = ? AND articleId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
             ps.setInt(2, articleId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -288,11 +267,9 @@ public class md190062_OrderOperations implements OrderOperations {
     private boolean shopHasItem(int articleId, int count) {
         String selectQuery = "SELECT amount FROM Article WHERE articleId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, articleId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1) >= count;
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && rs.getInt(1) >= count;
         } catch (SQLException ex) {
             return false;
         }
@@ -301,7 +278,6 @@ public class md190062_OrderOperations implements OrderOperations {
     private void removeItemsFromShop(int articleId, int count) {
         String updateQuery = "UPDATE Article SET amount = amount - ? WHERE articleId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setInt(1, count);
             ps.setInt(2, articleId);
             ps.executeUpdate();
@@ -313,7 +289,6 @@ public class md190062_OrderOperations implements OrderOperations {
         String updateQuery =
                 "UPDATE OrderT SET finalPrice = null, discountSum = null, systemProfit = null WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setInt(1, orderId);
             ps.executeUpdate(updateQuery);
         } catch (SQLException ignored) {
@@ -328,7 +303,6 @@ public class md190062_OrderOperations implements OrderOperations {
         String updateQuery =
                 "UPDATE OrderT SET state = 'sent', sentTime = ?, location = ?, timeToNext = ? WHERE orderId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setDate(1, new Date(generalOperations.getCurrentTime().getTimeInMillis()));
             ps.setInt(2, closestCity);
             ps.setInt(3, timeToNext);
@@ -343,10 +317,9 @@ public class md190062_OrderOperations implements OrderOperations {
         List<Integer> cities = new ArrayList<>();
 
         try (Statement st = connection.createStatement()) {
-
-            ResultSet resultSet = st.executeQuery(selectQuery);
-            while (resultSet.next()) {
-                cities.add(resultSet.getInt(1));
+            ResultSet rs = st.executeQuery(selectQuery);
+            while (rs.next()) {
+                cities.add(rs.getInt(1));
             }
             return cities;
         } catch (SQLException ex) {
@@ -356,15 +329,15 @@ public class md190062_OrderOperations implements OrderOperations {
 
     private List<Integer> getCitiesFromOrder(int orderId) {
         String selectQuery =
-                "SELECT DISTINCT(cityId) FROM ArticleInOrder AiO JOIN Article A ON(Aio.articleId = A.articleId) JOIN Shop S ON(A.shopId = S.shopId) WHERE orderId = ?";
+                "SELECT DISTINCT(cityId) FROM ArticleInOrder AiO JOIN Article A ON(Aio.articleId = A.articleId) "
+                        + "JOIN Shop S ON(A.shopId = S.shopId) WHERE orderId = ?";
         List<Integer> cities = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, orderId);
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                cities.add(resultSet.getInt(1));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                cities.add(rs.getInt(1));
             }
             return cities;
         } catch (SQLException ex) {
@@ -375,9 +348,7 @@ public class md190062_OrderOperations implements OrderOperations {
     private void makeTransaction(int orderId, int buyerId, BigDecimal finalPrice) {
         String insertQuery =
                 "INSERT INTO TransactionT(buyerId, orderId, type, executionTime, amount) VALUES(?, ?, 'buyer', ?, ?)";
-        try (PreparedStatement ps =
-                connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
+        try (PreparedStatement ps = connection.prepareStatement(insertQuery)) {
             ps.setInt(1, buyerId);
             ps.setInt(2, orderId);
             ps.setDate(3, new Date(generalOperations.getCurrentTime().getTimeInMillis()));

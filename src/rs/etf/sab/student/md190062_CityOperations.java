@@ -15,11 +15,13 @@ public class md190062_CityOperations implements CityOperations {
         String insertQuery = "INSERT INTO City(name) VALUES(?)";
         try (PreparedStatement ps =
                 connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
             ps.setString(1, name);
             ps.executeUpdate();
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            generatedKeys.next();
+
+            if (!generatedKeys.next()) {
+                return -1;
+            }
             int cityId = generatedKeys.getInt(1);
             RoutingUtils.addCity(cityId);
             return cityId;
@@ -34,10 +36,9 @@ public class md190062_CityOperations implements CityOperations {
         List<Integer> cities = new ArrayList<>();
 
         try (Statement st = connection.createStatement()) {
-
-            ResultSet resultSet = st.executeQuery(selectQuery);
-            while (resultSet.next()) {
-                cities.add(resultSet.getInt(1));
+            ResultSet rs = st.executeQuery(selectQuery);
+            while (rs.next()) {
+                cities.add(rs.getInt(1));
             }
             return cities;
         } catch (SQLException ex) {
@@ -49,11 +50,10 @@ public class md190062_CityOperations implements CityOperations {
     public int connectCities(int cityId1, int cityId2, int distance) {
         String selectQuery = "SELECT lineId FROM Line WHERE cityId1 = ? AND cityId2 = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, cityId2);
             ps.setInt(2, cityId1);
-            ResultSet resultSet = ps.executeQuery();
-            if (resultSet.next()) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
                 return -1;
             }
         } catch (SQLException ex) {
@@ -63,14 +63,15 @@ public class md190062_CityOperations implements CityOperations {
         String insertQuery = "INSERT INTO Line(cityId1, cityId2, distance) VALUES(?, ?, ?)";
         try (PreparedStatement ps =
                 connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
             ps.setInt(1, cityId1);
             ps.setInt(2, cityId2);
             ps.setInt(3, distance);
             ps.executeUpdate();
 
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            generatedKeys.next();
+            if (!generatedKeys.next()) {
+                return -1;
+            }
             RoutingUtils.connectCities(cityId1, cityId2, distance);
             return generatedKeys.getInt(1);
         } catch (SQLException ex) {
@@ -85,19 +86,16 @@ public class md190062_CityOperations implements CityOperations {
                 "SELECT cityId2 FROM Line WHERE cityId1 = ? UNION SELECT cityId1 FROM Line WHERE cityId2 = ?";
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, cityId);
             ps.setInt(2, cityId);
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                cities.add(resultSet.getInt(1));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                cities.add(rs.getInt(1));
             }
-
+            return cities;
         } catch (SQLException ex) {
             return cities;
         }
-
-        return cities;
     }
 
     @Override
@@ -106,13 +104,11 @@ public class md190062_CityOperations implements CityOperations {
         List<Integer> shops = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, cityId);
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                shops.add(resultSet.getInt(1));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                shops.add(rs.getInt(1));
             }
-
             return shops;
         } catch (SQLException ex) {
             return null;

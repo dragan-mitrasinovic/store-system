@@ -16,13 +16,11 @@ public class md190062_BuyerOperations implements BuyerOperations {
         String insertQuery = "INSERT INTO Buyer(name, cityId) VALUES(?, ?)";
         try (PreparedStatement ps =
                 connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
             ps.setString(1, name);
             ps.setInt(2, cityId);
             ps.executeUpdate();
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            generatedKeys.next();
-            return generatedKeys.getInt(1);
+            return generatedKeys.next() ? generatedKeys.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -32,7 +30,6 @@ public class md190062_BuyerOperations implements BuyerOperations {
     public int setCity(int buyerId, int cityId) {
         String updateQuery = "UPDATE Buyer SET cityId = ? WHERE buyerId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setInt(1, cityId);
             ps.setInt(2, buyerId);
             int updatedRows = ps.executeUpdate();
@@ -46,11 +43,9 @@ public class md190062_BuyerOperations implements BuyerOperations {
     public int getCity(int buyerId) {
         String selectQuery = "SELECT cityId FROM Buyer WHERE buyerId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, buyerId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -60,7 +55,6 @@ public class md190062_BuyerOperations implements BuyerOperations {
     public BigDecimal increaseCredit(int buyerId, BigDecimal credit) {
         String updateQuery = "UPDATE Buyer SET credit = credit + ? WHERE buyerId = ?";
         try (PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
             ps.setBigDecimal(1, credit);
             ps.setInt(2, buyerId);
             int updatedRows = ps.executeUpdate();
@@ -72,13 +66,10 @@ public class md190062_BuyerOperations implements BuyerOperations {
         }
 
         String selectQuery = "SELECT credit FROM Buyer WHERE buyerId = ?";
-        try (PreparedStatement ps =
-                connection.prepareStatement(selectQuery, new String[] {"amount"})) {
-
+        try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
             ps.setInt(1, buyerId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
             return null;
         }
@@ -89,12 +80,10 @@ public class md190062_BuyerOperations implements BuyerOperations {
         String insertQuery = "INSERT INTO OrderT(buyerId) VALUES(?)";
         try (PreparedStatement ps =
                 connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
-
             ps.setInt(1, buyerId);
             ps.executeUpdate();
             ResultSet generatedKeys = ps.getGeneratedKeys();
-            generatedKeys.next();
-            return generatedKeys.getInt(1);
+            return generatedKeys.next() ? generatedKeys.getInt(1) : -1;
         } catch (SQLException ex) {
             return -1;
         }
@@ -106,13 +95,11 @@ public class md190062_BuyerOperations implements BuyerOperations {
         List<Integer> orders = new ArrayList<>();
 
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, buyerId);
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                orders.add(resultSet.getInt(1));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                orders.add(rs.getInt(1));
             }
-
             return orders;
         } catch (SQLException ex) {
             return orders;
@@ -123,11 +110,9 @@ public class md190062_BuyerOperations implements BuyerOperations {
     public BigDecimal getCredit(int buyerId) {
         String selectQuery = "SELECT credit FROM Buyer WHERE buyerId = ?";
         try (PreparedStatement ps = connection.prepareStatement(selectQuery)) {
-
             ps.setInt(1, buyerId);
-            ResultSet resultSet = ps.executeQuery();
-            resultSet.next();
-            return resultSet.getBigDecimal(1);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getBigDecimal(1) : null;
         } catch (SQLException ex) {
             return null;
         }
