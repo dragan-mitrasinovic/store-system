@@ -44,20 +44,16 @@ public class md190062_GeneralOperations implements GeneralOperations {
 
     @Override
     public void eraseAll() {
-        String[] deleteQueries = {
-            "DELETE FROM TransactionT",
-            "DELETE FROM ArticleInOrder",
-            "DELETE FROM OrderT",
-            "DELETE FROM Article",
-            "DELETE FROM Buyer",
-            "DELETE FROM Shop",
-            "DELETE FROM Line",
-            "DELETE FROM City"
-        };
+        String deleteQuery = "DELETE FROM TransactionT\n"
+                        + "DELETE FROM ArticleInOrder\n"
+                        + "DELETE FROM OrderT\n"
+                        + "DELETE FROM Article\n"
+                        + "DELETE FROM Buyer\n"
+                        + "DELETE FROM Shop\n"
+                        + "DELETE FROM Line\n"
+                        + "DELETE FROM City";
         try (Statement st = connection.createStatement()) {
-            for (String query : deleteQueries) {
-                st.execute(query);
-            }
+            st.executeQuery(deleteQuery);
         } catch (SQLException ignored) {
         }
     }
