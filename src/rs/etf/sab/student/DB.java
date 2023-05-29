@@ -9,9 +9,6 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * @author Tasha
- */
 public class DB {
 
     private static final String username = "sa";
