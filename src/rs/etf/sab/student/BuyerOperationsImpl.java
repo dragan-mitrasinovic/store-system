@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class md190062_BuyerOperations implements BuyerOperations {
+public class BuyerOperationsImpl implements BuyerOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
 

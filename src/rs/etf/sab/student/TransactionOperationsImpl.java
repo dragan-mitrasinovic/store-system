@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class md190062_TransactionOperations implements TransactionOperations {
+public class TransactionOperationsImpl implements TransactionOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
 

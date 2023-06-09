@@ -4,7 +4,7 @@ import rs.etf.sab.operations.ArticleOperations;
 
 import java.sql.*;
 
-public class md190062_ArticleOperations implements ArticleOperations {
+public class ArticleOperationsImpl implements ArticleOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
 

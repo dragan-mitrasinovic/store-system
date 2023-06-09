@@ -8,14 +8,14 @@ public class StudentMain {
 
     public static void main(String[] args) {
 
-        ArticleOperations articleOperations = new md190062_ArticleOperations();
-        BuyerOperations buyerOperations = new md190062_BuyerOperations();
-        CityOperations cityOperations = new md190062_CityOperations();
-        GeneralOperations generalOperations = new md190062_GeneralOperations();
+        ArticleOperations articleOperations = new ArticleOperationsImpl();
+        BuyerOperations buyerOperations = new BuyerOperationsImpl();
+        CityOperations cityOperations = new CityOperationsImpl();
+        GeneralOperations generalOperations = new GeneralOperationsImpl();
         OrderOperations orderOperations =
-                new md190062_OrderOperations(generalOperations, buyerOperations);
-        ShopOperations shopOperations = new md190062_ShopOperations();
-        TransactionOperations transactionOperations = new md190062_TransactionOperations();
+                new OrderOperationsImpl(generalOperations, buyerOperations);
+        ShopOperations shopOperations = new ShopOperationsImpl();
+        TransactionOperations transactionOperations = new TransactionOperationsImpl();
 
         TestHandler.createInstance(
                 articleOperations,

@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class md190062_OrderOperations implements OrderOperations {
+public class OrderOperationsImpl implements OrderOperations {
 
     private final GeneralOperations generalOperations;
     private final BuyerOperations buyerOperations;
     private static final Connection connection = DB.getInstance().getConnection();
 
-    public md190062_OrderOperations(
+    public OrderOperationsImpl(
             GeneralOperations generalOperations, BuyerOperations buyerOperations) {
         this.generalOperations = generalOperations;
         this.buyerOperations = buyerOperations;

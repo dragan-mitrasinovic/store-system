@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class md190062_CityOperations implements CityOperations {
+public class CityOperationsImpl implements CityOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
 

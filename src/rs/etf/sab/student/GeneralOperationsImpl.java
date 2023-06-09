@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Calendar;
 
-public class md190062_GeneralOperations implements GeneralOperations {
+public class GeneralOperationsImpl implements GeneralOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
     private Calendar systemTime;

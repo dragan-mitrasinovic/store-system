@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class md190062_ShopOperations implements ShopOperations {
+public class ShopOperationsImpl implements ShopOperations {
 
     private static final Connection connection = DB.getInstance().getConnection();
 
